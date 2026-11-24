@@ -11,7 +11,7 @@ You'll install and check:
 | Python 3.9+ and a virtual environment | to install `ansible-navigator` without touching your system Python |
 | ansible-navigator | runs the factory playbook in the EE |
 | `oc` | logs in to your OpenShift cluster and gives the playbook a token |
-| git | clones this repository (the inventories are in it) |
+| This repository (git **or** a ZIP download) | the inventory files used in Lab 1 |
 | Registry login to `quay.io/redhat-cop` | the EE image is in a protected repository |
 
 **Supported laptops:** macOS (Apple Silicon or Intel) and Linux. On Windows use **WSL2**
@@ -69,13 +69,23 @@ Put `oc` on your `PATH`, then check:
 oc version --client
 ```
 
-## 4. git and this repository
+## 4. Get this repository
 
+You only need the two files in `inventory/`. Either way works, as long as the folder ends up as
+`~/vmf-bootcamp-day2-lab` (in your home directory):
+
+**Option A: git**
 ```bash
-git --version
 cd ~
 git clone <URL of this repository> vmf-bootcamp-day2-lab
-cd vmf-bootcamp-day2-lab
+```
+
+**Option B: no git, download the ZIP**
+On the repository page click **Code → Download ZIP**, then:
+```bash
+cd ~
+unzip ~/Downloads/<repository name>-main.zip
+mv <repository name>-main vmf-bootcamp-day2-lab
 ```
 
 > **Why not clone the collection source?** The factory playbook is called by its full name
@@ -121,7 +131,7 @@ Run these in a **new** terminal, with the virtual environment activated:
 | ansible-navigator | `ansible-navigator --version` | a version number |
 | oc | `oc version --client` | a version number |
 | EE image present | `podman images \| grep migration-ee` | one line with tag `2.6` |
-| Repository cloned under your home directory | `ls ~/vmf-bootcamp-day2-lab/inventory` | two `.yml` files |
+| Repository (git clone or ZIP) under your home directory | `ls ~/vmf-bootcamp-day2-lab/inventory` | two `.yml` files |
 
 Problems? See [04 · Troubleshooting](04-troubleshooting.md).
 
