@@ -1,0 +1,68 @@
+---
+# Participant inventory for the Day 2 labs on the RHDP "Migration Factory" environment.
+# Use it together with inventory-openshift-virt-bootcamp-base.yml (do not edit the base file).
+# Replace every <...> placeholder. Keep this file on your laptop only: do not commit real values.
+
+all:
+  vars:
+
+    # Container registry credentials (quay.io/redhat-cop robot account, given by the instructor).
+    # Used by AAP to pull the execution environment and by MTV to pull the VDDK image.
+    container_username: <quay robot username>
+    container_password: <quay robot token>
+
+    # Red Hat credentials are only needed when the factory installs AAP.
+    # RHDP already has AAP, so any non-empty value works.
+    rh_username: notused
+    rh_password: notused
+
+    # Simulated vCenter of the RHDP environment (from your RHDP environment details page).
+    vmware_host: <vcenter host, e.g. vcenter.apps.ocpv02.rhdp.net>
+    vmware_username: <your vCenter user, e.g. user7>
+    vmware_password: <your vCenter password>
+
+    # --- RHDP: seed the EXISTING AAP instead of installing a new one ---
+    aap_version: 2.5                      # AAP version of the RHDP environment
+    aap_project_branch: "1.25.0"          # pin the AAP Project to the collection release tag (quoted)
+    aap_validate_certs: false             # RHDP routes use self-signed certificates
+    aap_request_timeout: 60               # avoid "Failed to get token: read operation timed out"
+    controller_hostname: <AAP host name, without https://>
+    controller_username: admin
+    controller_password: <AAP admin password>
+    aap_hostname: <same AAP host name>
+    aap_username: admin
+    aap_password: <same AAP admin password>
+
+# Do not install AAP on the cluster: RHDP already provides one.
+migration_hub:
+  hosts:
+    openshift-virt.bootcamp.redhat.com:
+      install_aap: false
+
+# The cluster acts as hub and spoke (single-cluster lab layout).
+# The host name is only a label; it appears in the AAP template names.
+migration_spoke:
+  hosts:
+    openshift-virt.bootcamp.redhat.com:
+      openshift_verify_ssl: false
+
+      # Migration targets (source providers) to configure on this spoke
+      configured_migration_targets:
+        - vmware-virt-bootcamp
+
+  vars:
+
+    migration_targets:
+      - name: vmware-virt-bootcamp
+        type: vmware
+        host: "{{ vmware_host }}"
+        username: "{{ vmware_username }}"
+        password: "{{ vmware_password }}"
+        insecureSkipTlsVerify: true       # the simulated vCenter uses a self-signed certificate
+        vddk:
+          image: "{{ mtv_vmware_vddk_init_image }}"
+          username: "{{ container_username }}"
+          password: "{{ container_password }}"
+        mapping:
+          create: true
+...
