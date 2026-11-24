@@ -12,9 +12,9 @@ AAP: workflow "Configure OpenShift Virtualization Migration" ──► MTV: prov
 
 ## Step 1 · Collect your values and log in
 
-Open your RHDP environment details page and note the cluster API URL, the admin user and
-password, the AAP URL with its admin password, and your vCenter host, `userN` and password
-(see the [README](README.md#where-to-find-your-values)).
+Open your RHDP service details page and the **Lab instructions** page, and note the cluster API
+URL, the admin password, the *Automation Controller URL* with its admin password, and the vCenter
+host, user and password (exact labels in the [README](README.md#where-to-find-your-values)).
 
 Use a **separate kubeconfig** for the lab, so your other cluster logins stay untouched:
 ```bash
@@ -84,12 +84,21 @@ SSH_AUTH_SOCK="" ansible-navigator run \
 | `--pae false` | don't write playbook artefacts (they would contain your passwords) |
 | `-e openshift_host / openshift_temporary_api_key` | your cluster and a short-lived token; the playbook creates a long-lived service account token for AAP from it |
 
-It takes about 5–10 minutes. The **PLAY RECAP** must show `failed=0` for every host. The run is
-**idempotent**: after a timeout or an error you've fixed, just run it again.
+It takes about 5–10 minutes (about 6 minutes in our test). The **PLAY RECAP** must show
+`failed=0` for both hosts, for example:
+```text
+aap-aap.apps.cluster-xxxxx.dyn.redhatworkshops.io : ok=171  changed=41  unreachable=0  failed=0  skipped=100 …
+openshift-virt.bootcamp.redhat.com                : ok=6    changed=2   unreachable=0  failed=0  skipped=9   …
+```
+The run is **idempotent**: after a timeout or an error you've fixed, just run it again.
 
 ## Step 4 · Explore what was seeded in AAP
 
 Log in to the AAP web UI as `admin`.
+
+> Your RHDP environment also contains the demo's **own** templates (*01 Migrate VMware VMs to
+> OpenShift Virtualization*, *02 Provision Linux VMs*, …, *Demo Job Template*) in the *Default*
+> organization. They're not part of the factory; don't use them in these labs.
 
 1. **Organizations:** a new organization **OpenShift Virtualization Migration** holds everything.
 
@@ -130,6 +139,7 @@ Log in to the AAP web UI as `admin`.
    - The optional steps (Networks, VDDK, Mapping) were decided **at seed time** by the
      `network:`, `vddk:` and `mapping:` keys of the target in the inventory. Your target has `vddk`
      and `mapping`, so there's no Networks step.
+   - The whole workflow takes about 2–3 minutes.
 3. Open **Jobs** to see each job's output.
 
    ![Jobs](images/l1-aap-jobs.png)
@@ -155,6 +165,14 @@ The same checks from the command line:
 oc get providers.forklift.konveyor.io -n openshift-mtv
 oc get secret vmware-virt-bootcamp-vddk -n openshift-mtv
 oc get networkmap,storagemap -n openshift-mtv
+```
+Expected output (the providers `host` and `vmware` were already there; `vmware` belongs to the
+RHDP demo):
+```text
+NAME                   TYPE        STATUS   READY   CONNECTED   INVENTORY   URL
+host                   openshift   Ready    True    True        True
+vmware                 vsphere     Ready    True    True        True        https://vcenter.apps.ocpvNN.rhdp.net/sdk
+vmware-virt-bootcamp   vsphere     Ready    True    True        True        https://vcenter.apps.ocpvNN.rhdp.net/sdk
 ```
 The map name `<target>-host` means "from source `vmware-virt-bootcamp` to destination `host`",
 where `host` is the cluster itself.

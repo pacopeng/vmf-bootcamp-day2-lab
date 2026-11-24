@@ -23,8 +23,10 @@ oc new-project vmexamples-automation
 
 ## Step 2 · (Optional) Configure Networks
 
-**Do this step only if your instructor gives you a localnet name for your environment.**
-Otherwise skip it; your VMs map to the pod network, which is fine for this lab.
+**Skip this step in the RHDP environment.** It has no NMState operator (`oc get nncp` →
+"the server doesn't have a resource type"), so there's no localnet or bridge for a NAD to use.
+Your VMs map to the pod network, which is fine for this lab. Read the step anyway: it's how you'd
+do it on a real cluster. Run it only if your instructor gives you a localnet name.
 
 The job template **Configure Networks - vmware-virt-bootcamp - openshift-virt.bootcamp.redhat.com**
 creates NetworkAttachmentDefinitions (NADs) and labels each one with the vSphere port group it
@@ -81,6 +83,17 @@ oc get secret vmware-virt-bootcamp-vddk -n vmexamples-automation
 oc get networkmap,storagemap -n vmexamples-automation
 oc get networkmap vmware-virt-bootcamp-host -n vmexamples-automation \
   -o jsonpath='{range .spec.map[*]}{.source.name} -> {.destination.type} {.destination.namespace}/{.destination.name}{"\n"}{end}'
+```
+
+Expected in the RHDP environment (the workflow takes about 2 minutes):
+```text
+segment-migrating-to-ocpvirt -> pod /
+```
+and the storage map sends datastore `workloadshare` to `ocs-external-storagecluster-ceph-rbd`
+(the cluster's default storage class):
+```bash
+oc get storagemap vmware-virt-bootcamp-host -n vmexamples-automation \
+  -o jsonpath='{range .spec.map[*]}{.source.name} -> {.destination.storageClass}{"\n"}{end}'
 ```
 
 **Read your network map.** Each vSphere port group points either to a NAD (`multus`) or to the

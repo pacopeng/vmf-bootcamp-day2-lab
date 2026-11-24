@@ -17,8 +17,8 @@ all:
     rh_password: notused
 
     # Simulated vCenter of the RHDP environment (from your RHDP environment details page).
-    vmware_host: <vcenter host, e.g. vcenter.apps.ocpv02.rhdp.net>
-    vmware_username: <your vCenter user, e.g. user7>
+    vmware_host: <vcenter host from the Lab instructions page, e.g. vcenter.apps.ocpv07.rhdp.net>
+    vmware_username: <your vCenter user, e.g. user1>
     vmware_password: <your vCenter password>
 
     # --- RHDP: seed the EXISTING AAP instead of installing a new one ---

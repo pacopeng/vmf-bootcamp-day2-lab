@@ -45,7 +45,9 @@ Every factory job is **idempotent**, so re-running is the normal way to recover.
 | Plan stays **Validating** for minutes | the VDDK validator job is pulling images for the first time | wait; check `oc get pods -n vmexamples-automation` and act only on `ErrImagePull` |
 | Plan warnings `NetMapPreservingIPsOnPodNetwork`, `VMMissingGuestIPs` | port groups on the pod network / no guest IPs from vCenter | warnings only; the Plan still runs |
 | `dry_run: true` and nothing appears in the console | expected: a dry run only prints the Plan in the job output | run again with `start_migration: false` |
-| **ImageConversion** fails with `HTTP error response: Service Unavailable` | the simulated vCenter has no disk service | **expected** in this environment; see the Lab 3 checkpoint |
+| **ImageConversion** fails with `HTTP error response: Service Unavailable` | the demo vCenter has no disk service | **expected** in this environment; see the Lab 3 checkpoint |
+| Conversion pod log ends with only `Error executing v2v command: exit status 1` | the real error is in the middle of a ~1,000-line log | `oc logs -n vmexamples-automation <pod> \| grep -E 'OpenEx\|Service Unavailable' \| head -5` |
+| You used the RHDP demo's own template *01 Migrate VMware VMs to OpenShift Virtualization* | that's the demo's template, not the factory | use **OpenShift Virtualization Migration - Migrate - openshift-virt.bootcamp.redhat.com** |
 
 ## Still stuck?
 Collect the job output (AAP → Jobs → the failed job → Output) and the exact error line, then ask

@@ -28,7 +28,7 @@ Each participant has **their own RHDP instance**:
 |---|---|
 | OpenShift cluster | One cluster that is both the factory **hub** and the migration **spoke** (a test layout; production separates them). OpenShift Virtualization and MTV are pre-installed. |
 | Ansible Automation Platform | **Already installed** in your environment. In Lab 1 the factory doesn't install AAP; it **seeds** your existing AAP with credentials, job templates and workflows. |
-| vCenter | A **simulated vCenter, shared** by all participants. You log in with your own `userN` and see only your own VMs. |
+| vCenter | A **demo vCenter** (host on your Lab instructions page, e.g. `vcenter.apps.ocpv07.rhdp.net`). You log in with the user shown there (e.g. `user1`) and see only your own four VMs. Its API is real, but it can't serve disk data (see below). |
 | Your laptop | Runs `oc`, `podman` and `ansible-navigator` to seed AAP. After that, everything happens in AAP. |
 
 > **Expected result of Lab 3:** the simulated vCenter answers every API call but can't serve
@@ -39,13 +39,24 @@ Each participant has **their own RHDP instance**:
 
 ## Where to find your values
 
-| Value | Where | Used in |
-|---|---|---|
-| Cluster API URL, console URL | RHDP environment details page (your service in the RHDP catalog) | Lab 1 (`oc login`) |
-| Cluster admin user and password | RHDP environment details page | Lab 1 |
-| AAP URL, admin user and password | RHDP environment details page (if missing, see [Lab 1, step 1](01-lab1-install-configure.md#step-1--collect-your-values-and-log-in)) | Lab 1 inventory, AAP UI |
-| vCenter host, `userN`, password | RHDP environment details page | Lab 1 inventory |
-| quay.io/redhat-cop robot username and token | **Your instructor** (not in this repo) | Prerequisites, Lab 1 inventory |
+Your RHDP service ("OpenShift Virtualization Migration Demo") shows the values on its **details
+page / provisioning email**. The vCenter login is on the **Lab instructions** (Showroom) page.
+
+| Value | Where (exact label) | Example | Used in |
+|---|---|---|---|
+| Cluster API URL | details page: *OpenShift API for command line 'oc' client* | `https://api.cluster-xxxxx.dyn.redhatworkshops.io:6443` | Lab 1 (`oc login`) |
+| Console URL | details page: *OpenShift Console* | `https://console-openshift-console.apps.cluster-xxxxx…` | all labs |
+| Cluster admin | details page: *User admin with password … is cluster admin* | `admin` | Lab 1 |
+| AAP URL | details page: *Automation Controller URL* | `https://aap-aap.apps.cluster-xxxxx…` | Lab 1 inventory (host name **without** `https://`), AAP UI |
+| AAP admin user / password | details page: *Automation Controller Admin Login / Admin Password* (often the same password as the cluster admin) | `admin` | Lab 1 inventory, AAP UI |
+| vCenter host | **Lab instructions** page → *Navigate to the vCenter Console* link (the host name differs per environment) | `vcenter.apps.ocpv07.rhdp.net` | Lab 1 inventory |
+| vCenter user / password | **Lab instructions** page → *Setting Up Your Environment* | `user1` | Lab 1 inventory |
+| quay.io/redhat-cop robot username and token | **Your instructor** (not in this repo) | | Prerequisites, Lab 1 inventory |
+
+> The RHDP item is also a stand-alone demo: its own AAP job templates (*01 Migrate VMware VMs to
+> OpenShift Virtualization*, *02 Provision Linux VMs*, …) and an MTV provider called `vmware`
+> already exist. **Ignore them.** In these labs you build and use the Migration Factory's own
+> objects (organization *OpenShift Virtualization Migration*, provider `vmware-virt-bootcamp`).
 
 Keep these values in a local note. Never commit them to Git.
 

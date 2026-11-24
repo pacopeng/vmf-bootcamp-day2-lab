@@ -60,9 +60,12 @@ in every new terminal you use for the labs.
 
 ## 3. The `oc` command line
 
-Download the client that matches your OS:
-- from the **OpenShift web console** of your lab cluster: **?** (top right) → **Command line tools**, or
-- from <https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/>.
+The RHDP lab cluster runs **OpenShift 4.18**. Use a 4.18 client (an older one mostly works,
+but a matching version avoids surprises). Download the client for your OS:
+- from the **OpenShift web console** of your lab cluster: **?** (top right) → **Command line tools**,
+- or from <https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-4.18/> (`openshift-client-mac-arm64-*.tar.gz`
+  for Apple Silicon, `openshift-client-mac-*.tar.gz` for Intel Macs, `openshift-client-linux-*.tar.gz` for Linux / WSL2).
+  Your RHDP details page also shows a direct Linux download link.
 
 Put `oc` on your `PATH`, then check:
 ```bash

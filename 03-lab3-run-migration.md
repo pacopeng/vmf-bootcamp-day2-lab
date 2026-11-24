@@ -14,8 +14,16 @@ start                    → copy the disks             (the migration itself)
 The shared simulated vCenter shows each participant only their own VMs.
 
 Console: **Migration for Virtualization → Providers → `vmware-virt-bootcamp` → Virtual Machines**.
-Note the exact **names** of 1–2 VMs (for example a small web or proxy VM). Names are
-**case-sensitive**.
+Note the exact **names** of 1–2 VMs. Names are **case-sensitive**.
+
+In the RHDP environment you'll see four VMs of a small 3-tier web app, named `<app>-userN`, all
+powered off:
+```text
+database-user1   /RS00/vm/Roadshow/database-user1
+winweb01-user1   /RS00/vm/Roadshow/winweb01-user1
+winweb02-user1   /RS00/vm/Roadshow/winweb02-user1
+haproxy-user1    /RS00/vm/Roadshow/haproxy-user1     ← use this one (smallest disk)
+```
 
 > If a name exists more than once in the inventory, use its **path** instead
 > (`path: /<datacenter>/vm/<folder>/<name>`, shown in the VM details).
@@ -34,11 +42,10 @@ mtv_migrate_migration_request:
   source: vmware-virt-bootcamp               # the source provider (= target name)
   source_namespace: openshift-mtv            # providers live in openshift-mtv
   destination_namespace: openshift-mtv
-  plan_name: <userN>-wave1
+  plan_name: <userN>-wave1                   # e.g. user1-wave1
   dry_run: true
   vms:
-    - name: <your VM 1>
-    - name: <your VM 2>
+    - name: <your VM, e.g. haproxy-user1>
 ```
 ![Review](images/l3-aap-job-template-migrate-review.png)
 
@@ -61,20 +68,23 @@ Console: project **vmexamples-automation → Migration for Virtualization → Pl
 ![Plans](images/l3-openshift-console-plans.png)
 
 1. The Plan first shows **Validating**. MTV starts a short-lived job (`vddk-validator-…`) that
-   checks the VDDK image. The first time on a cluster this can take a few minutes, because an
-   image has to be pulled.
-2. Then the Plan becomes **Ready**. Open it and look at the **conditions**. You'll probably see
-   two warnings that don't block the migration:
-   - `NetMapPreservingIPsOnPodNetwork`: some port groups map to the pod network, where static IPs
-     can't be kept;
-   - `VMMissingGuestIPs`: vCenter reports no guest IPs (the VM is off or VMware Tools isn't running).
+   checks the VDDK image. This took about 1 minute in our test; it can take longer the first time
+   on a cluster, because an image has to be pulled.
+2. Then the Plan becomes **Ready**. Open it and look at the **conditions**. You'll see warnings
+   that don't block the migration:
+   - `NetMapPreservingIPsOnPodNetwork` (seen in RHDP): your port group maps to the pod network,
+     where static IPs can't be kept;
+   - possibly `VMMissingGuestIPs`: vCenter reports no guest IPs (the VM is off or VMware Tools
+     isn't running).
 3. The **Virtual machines** tab lists your VMs:
 
    ![Plan VMs](images/l3-openshift-console-plan-virtual-machines.png)
 
 ## Step 4 · Start the migration
 
-On the Plan page click **Start** (or launch the template again with `start_migration: true`).
+On the Plan page click **Start**, or launch the template again with the same variables and
+`start_migration: true` instead of `false`. The job finds the existing Plan and only adds the
+Migration.
 
 ![Migration started](images/l3-openshift-console-plan-migration-started.png)
 
@@ -87,24 +97,29 @@ In this RHDP environment the expected result is:
 | Phase | Expected | Why |
 |---|---|---|
 | Plan | Ready | providers, maps and VDDK validated |
-| Initialize, DiskAllocation | ✅ succeed | MTV created the target disks (PVCs) on your cluster |
-| **ImageConversion** | ❌ **fails** | the simulated vCenter can't serve disk data |
+| Initialize, DiskAllocation | ✅ succeed | MTV created the target disk on your cluster (DataVolume `…-vm-NN-…` Succeeded, PVC Bound) |
+| **ImageConversion** | ❌ **fails** after about 2–3 minutes: *Guest conversion failed. See pod logs for details.* | the demo vCenter can't serve disk data |
+| Plan | **Failed** | because the only VM failed |
 
 **Troubleshoot it like a pro.** Find the exact error by following the same path you'd use on a
 real migration:
 1. **Plan conditions** (Plan page → Details): which VM failed, and in which phase.
 2. **VM pipeline** (Plan → Virtual machines → expand the VM): the failed step and its message.
-3. **Conversion pod log:**
+3. **Conversion pod log.** The conversion pod is named `<plan>-vm-<id>-xxxxx` and ends in `Error`:
    ```bash
-   oc get pods -n vmexamples-automation | grep -i -E 'v2v|<your plan name>'
-   oc logs -n vmexamples-automation <conversion pod> | grep -i -E 'vixdisklib|error' | tail -5
+   oc get pods -n vmexamples-automation
+   # user1-wave1-vm-32-xxxxx   0/1   Error   ...
+   oc logs -n vmexamples-automation <conversion pod> | grep -E 'OpenEx|Service Unavailable' | head -5
    ```
-   You should find:
+   The log is about 1,000 lines, and its **end** only says `Error executing v2v command: exit status 1`.
+   The real cause is in the middle, so search for it as above instead of using `tail`. You should find:
    ```text
+   VixDiskLib_ConnectEx: Advanced transport modes not available for opening moref=vm-32. (… HTTP error response: Service Unavailable
+   VixDiskLib_OpenEx: Open disk '[workloadshare] haproxy-user1/haproxy.vmdk'.
    VixDiskLib_OpenEx: Failed to start session. Other error encountered: HTTP error response: Service Unavailable
    ```
-   VDDK reached the vCenter, but opening the disk returned **503**. The simulated vCenter has no
-   disk service, so this is the expected end of the lab.
+   VDDK reached the vCenter and found the disk, but opening it for reading returned **503**. The
+   demo vCenter has no disk service, so this is the expected end of the lab.
 
 **In a real environment** the pipeline continues: the disks are copied, virt-v2v converts the
 guest, and the VMs appear under **Virtualization → VirtualMachines** (screenshots from the
