@@ -80,15 +80,16 @@ You only need the two files in `inventory/`. Either way works, as long as the fo
 **Option A: git**
 ```bash
 cd ~
-git clone <URL of this repository> vmf-bootcamp-day2-lab
+git clone https://github.com/pacopeng/vmf-bootcamp-day2-lab.git
 ```
 
 **Option B: no git, download the ZIP**
-On the repository page click **Code → Download ZIP**, then:
+
+Open <https://github.com/pacopeng/vmf-bootcamp-day2-lab>, click **Code → Download ZIP**, then:
 ```bash
 cd ~
-unzip ~/Downloads/<repository name>-main.zip
-mv <repository name>-main vmf-bootcamp-day2-lab
+unzip ~/Downloads/vmf-bootcamp-day2-lab-main.zip
+mv vmf-bootcamp-day2-lab-main vmf-bootcamp-day2-lab
 ```
 
 > **Why not clone the collection source?** The factory playbook is called by its full name
