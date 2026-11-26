@@ -13,6 +13,8 @@ Every factory job is **idempotent**, so re-running is the normal way to recover.
 | Podman Desktop shows 403 for `quay.io/redhat-cop` | Podman Desktop uses the whole path as a host name | log in from the CLI: `podman login quay.io/redhat-cop` |
 | `invalid username/password` when pulling the EE | an old stored entry for `quay.io/redhat-cop` takes precedence | `podman logout quay.io/redhat-cop`, then log in again with the robot token |
 | EE pull takes very long | the image is about 550 MB | pull it before Day 2 (prerequisites, step 5) |
+| `ERROR! the playbook: …/inventory/infra.openshift_virtualization_migration.migration_factory_aap could not be found` | an **old ansible-navigator** (e.g. 2.2.0) runs instead of the venv's: installed earlier by `apt` / `pip --user`, or a venv built on Python < 3.10. It treats the collection playbook name as a local file | `ansible-navigator --version` and `which -a ansible-navigator`; in the venv `pip install --upgrade ansible-navigator`, `hash -r`, remove the older copy (or call `~/.virtualenvs/openshift_virt_bootcamp/bin/ansible-navigator`); Python < 3.10 → recreate the venv (prerequisites, step 2) |
+| WSL2: `cd ~/vmf-bootcamp-day2-lab/...: No such file or directory`, or odd mount errors | the repository is on the Windows drive (`/mnt/c/Users/.../My Documents/...`) | clone it again inside WSL under `~` and copy your filled-in inventory over |
 
 ## Lab 1
 
@@ -21,7 +23,9 @@ Every factory job is **idempotent**, so re-running is the normal way to recover.
 | `Unauthorized` / `the server has asked for the client to provide credentials` | `oc` token expired or wrong cluster | `oc login …` again; check `oc whoami --show-server`; re-run step 3 |
 | `No OpenShift auth method provided` | the `-e openshift_host=… -e openshift_temporary_api_key=…` options are missing, or `oc whoami -t` returned nothing | log in again and re-run the full command |
 | `Failed to get token: The read operation timed out` | AAP was slow while many objects were created in parallel | `aap_request_timeout: 60` must be in your inventory; re-run |
-| `Invalid credentials` / 401 from AAP | wrong `controller_*` / `aap_*` values | host name **without** `https://`, admin password from your RHDP page |
+| `Invalid credentials` / 401 from AAP | wrong `aap_url` / `aap_admin_password` | `aap_url` = the **Automation Controller URL** (AAP login page), password = *Automation Controller Admin Password*; check `curl -sk https://<AAP host>/api/gateway/v1/ping/` |
+| `SSL: UNEXPECTED_EOF_WHILE_READING … EOF occurred in violation of protocol` while seeding AAP (often after many tasks succeeded) | the network path drops HTTPS connections: corporate VPN / TLS-inspecting proxy, or WSL2 NAT networking / MTU | Windows: set WSL **mirrored** networking (prerequisites W3), or `sudo ip link set dev eth0 mtu 1350`; disconnect the VPN for the seed; then re-run (idempotent). Not a certificate problem: cert checks are already off |
+| URLs like `https://https://…` or "Name or service not known" for vCenter/AAP | an old inventory where the host name lines had `https://` pasted in | use the current inventory template: paste the URLs into `vcenter_url` / `aap_url`; the host names are derived |
 | A playbook task tries to install or subscribe AAP | `install_aap: false` is missing under `migration_hub` | add it (see the inventory template) and re-run |
 | Workflow: **Configure MTV Provider** fails | wrong vCenter values | fix `vmware_*` in the inventory and re-run step 3 (or edit the `vmware-virt-bootcamp` credential in AAP) and relaunch the workflow |
 | Provider not Ready, message about the certificate | TLS check against the simulated vCenter | `insecureSkipTlsVerify: true` on the target, re-seed, relaunch |

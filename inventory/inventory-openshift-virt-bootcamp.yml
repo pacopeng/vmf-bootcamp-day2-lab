@@ -16,22 +16,35 @@ all:
     rh_username: notused
     rh_password: notused
 
-    # Simulated vCenter of the RHDP environment (from your RHDP environment details page).
-    vmware_host: <vcenter host from the Lab instructions page, e.g. vcenter.apps.ocpv07.rhdp.net>
+    # ===== vCenter: from the Lab instructions page ========================================
+    # Paste the vCenter link exactly as shown ("Navigate to the vCenter Console"),
+    # https:// and a trailing / are fine, e.g. https://vcenter.apps.ocpv07.rhdp.net
+    vcenter_url: <vCenter URL from the Lab instructions page>
     vmware_username: <your vCenter user, e.g. user1>
     vmware_password: <your vCenter password>
+
+    # ===== AAP: from the RHDP details page ===============================================
+    # Paste the "Automation Controller URL" exactly as shown, https:// is fine,
+    # e.g. https://aap-aap.apps.cluster-xxxxx.dyn.redhatworkshops.io
+    # It is the address of the AAP LOGIN PAGE (the platform gateway). Do NOT use any other
+    # AAP route, e.g. one with "-controller-" in its name.
+    aap_url: <Automation Controller URL from the RHDP details page>
+    aap_admin_password: <Automation Controller Admin Password>
+
+    # ----- derived values: do not edit below this line -----------------------------------
+    vmware_host: "{{ vcenter_url | regex_replace('^https?://', '') | regex_replace('/.*$', '') }}"
+    controller_hostname: "{{ aap_url | regex_replace('^https?://', '') | regex_replace('/.*$', '') }}"
+    controller_username: admin
+    controller_password: "{{ aap_admin_password }}"
+    aap_hostname: "{{ controller_hostname }}"
+    aap_username: admin
+    aap_password: "{{ aap_admin_password }}"
 
     # --- RHDP: seed the EXISTING AAP instead of installing a new one ---
     aap_version: 2.5                      # AAP version of the RHDP environment
     aap_project_branch: "1.25.0"          # pin the AAP Project to the collection release tag (quoted)
     aap_validate_certs: false             # RHDP routes use self-signed certificates
     aap_request_timeout: 60               # avoid "Failed to get token: read operation timed out"
-    controller_hostname: <AAP host name, without https://>
-    controller_username: admin
-    controller_password: <AAP admin password>
-    aap_hostname: <same AAP host name>
-    aap_username: admin
-    aap_password: <same AAP admin password>
 
 # Do not install AAP on the cluster: RHDP already provides one.
 migration_hub:

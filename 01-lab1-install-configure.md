@@ -26,9 +26,17 @@ oc login --insecure-skip-tls-verify=true -u <admin user> -p '<admin password>' <
 oc whoami --show-server        # must print your RHDP cluster API URL
 ```
 
+> **Which AAP address?** Use **the address of the AAP login page**: on the RHDP details page it's
+> labelled **Automation Controller URL** and looks like `https://aap-aap.apps.cluster-xxxxx.dyn.redhatworkshops.io`.
+> Since AAP 2.5 this is the *platform gateway*; the controller runs behind it. **Don't** use any
+> other AAP route (for example one with `-controller-` in its name). Check that you have the right one:
+> ```bash
+> curl -sk https://<AAP host>/api/gateway/v1/ping/      # expected: {"status":"good", ...}
+> ```
+
 If the AAP URL or password isn't on your RHDP page, find them on the cluster:
 ```bash
-oc get route -A | grep -i -E 'aap|controller|gateway'      # the AAP host name
+oc get route -A | grep -i -E 'aap|gateway'                  # the AAP login page route
 oc get secret -A | grep -i admin-password                   # then: oc extract secret/<name> -n <ns> --to=-
 ```
 
@@ -40,15 +48,30 @@ You use **two** inventory files:
 
 ```bash
 cd ~/vmf-bootcamp-day2-lab/inventory
-vi inventory-openshift-virt-bootcamp.yml       # or any editor
+vi inventory-openshift-virt-bootcamp.yml       # or nano, or any editor
 ```
 
-What the RHDP-specific lines do:
+You fill in only these lines; **paste the URLs exactly as shown** on the RHDP pages (with
+`https://` is fine, the file derives the host names itself):
+
+| Line | Value | Example |
+|---|---|---|
+| `container_username` / `container_password` | quay robot account from the instructor | |
+| `vcenter_url` | vCenter link from the Lab instructions page | `https://vcenter.apps.ocpv07.rhdp.net` |
+| `vmware_username` / `vmware_password` | vCenter user and password from the Lab instructions page | `user1` |
+| `aap_url` | **Automation Controller URL** from the details page (the AAP login page) | `https://aap-aap.apps.cluster-xxxxx.dyn.redhatworkshops.io` |
+| `aap_admin_password` | **Automation Controller Admin Password** | |
+
+Don't edit the "derived values" block. It turns your URLs into the host names the factory
+needs (`vmware_host`, `controller_hostname`, `aap_hostname`) and reuses the password for both
+`controller_password` and `aap_password`.
+
+What the other RHDP-specific lines do:
 
 | Setting | Why |
 |---|---|
 | `install_aap: false` (host `openshift-virt.bootcamp.redhat.com` in `migration_hub`) | RHDP already has AAP; the factory only seeds it |
-| `controller_*` / `aap_*` | where and how to reach your existing AAP (host name **without** `https://`) |
+| `controller_*` / `aap_*` (derived) | where and how to reach your existing AAP; both point to the same AAP login page host |
 | `aap_version: 2.5` | the AAP version in RHDP |
 | `aap_project_branch: "1.25.0"` | the AAP Project checks out the collection's release tag, not the moving `main` branch |
 | `aap_request_timeout: 60` | gives AAP more time when many objects are created in parallel |

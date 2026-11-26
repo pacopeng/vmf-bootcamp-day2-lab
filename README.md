@@ -47,9 +47,9 @@ page / provisioning email**. The vCenter login is on the **Lab instructions** (S
 | Cluster API URL | details page: *OpenShift API for command line 'oc' client* | `https://api.cluster-xxxxx.dyn.redhatworkshops.io:6443` | Lab 1 (`oc login`) |
 | Console URL | details page: *OpenShift Console* | `https://console-openshift-console.apps.cluster-xxxxx…` | all labs |
 | Cluster admin | details page: *User admin with password … is cluster admin* | `admin` | Lab 1 |
-| AAP URL | details page: *Automation Controller URL* | `https://aap-aap.apps.cluster-xxxxx…` | Lab 1 inventory (host name **without** `https://`), AAP UI |
-| AAP admin user / password | details page: *Automation Controller Admin Login / Admin Password* (often the same password as the cluster admin) | `admin` | Lab 1 inventory, AAP UI |
-| vCenter host | **Lab instructions** page → *Navigate to the vCenter Console* link (the host name differs per environment) | `vcenter.apps.ocpv07.rhdp.net` | Lab 1 inventory |
+| AAP URL (the **AAP login page**) | details page: *Automation Controller URL* | `https://aap-aap.apps.cluster-xxxxx…` | Lab 1 inventory `aap_url` (paste as shown), AAP UI |
+| AAP admin user / password | details page: *Automation Controller Admin Login / Admin Password* (often the same password as the cluster admin) | `admin` | Lab 1 inventory `aap_admin_password`, AAP UI |
+| vCenter URL | **Lab instructions** page → *Navigate to the vCenter Console* link (differs per environment) | `https://vcenter.apps.ocpv07.rhdp.net` | Lab 1 inventory `vcenter_url` (paste as shown) |
 | vCenter user / password | **Lab instructions** page → *Setting Up Your Environment* | `user1` | Lab 1 inventory |
 | quay.io/redhat-cop robot username and token | **Your instructor** (not in this repo) | | Prerequisites, Lab 1 inventory |
 
