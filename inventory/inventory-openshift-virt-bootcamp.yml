@@ -6,7 +6,7 @@
 all:
   vars:
 
-    # Container registry credentials (quay.io/redhat-cop robot account, given by the instructor).
+    # Container registry credentials (quay.io/redhat-cop robot account, posted in the bootcamp Slack channel).
     # Used by AAP to pull the execution environment and by MTV to pull the VDDK image.
     container_username: <quay robot username>
     container_password: <quay robot token>

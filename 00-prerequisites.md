@@ -135,6 +135,13 @@ which -a ansible-navigator                         # FIRST line must be ~/.virtu
 ```
 Run `source ~/.virtualenvs/openshift_virt_bootcamp/bin/activate` again in **every new terminal**.
 
+> **`pip install` fails with `SSL: CERTIFICATE_VERIFY_FAILED` (corporate network / proxy)?** Your
+> company inspects HTTPS traffic. Best: point pip to the company CA bundle,
+> `pip config set global.cert /path/to/company-ca.pem`. Quick one-time workaround for the lab:
+> ```bash
+> pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org ansible-navigator
+> ```
+
 > If `ansible-navigator --version` shows an old version (e.g. 2.2.0) or `which -a` lists another
 > path first, an old copy is in the way and Lab 1 will fail with *"the playbook: …
 > could not be found"*. Remove the other copy and run `hash -r`, or call
@@ -163,10 +170,11 @@ mv vmf-bootcamp-day2-lab-main vmf-bootcamp-day2-lab
 ```
 
 ### W9 · Registry login and the execution environment
+The robot username and token are posted in the bootcamp **Slack channel (prerequisites)**.
 ```bash
 podman login quay.io/redhat-cop
-# Username: <robot username from the instructor>
-# Password: <robot token from the instructor>
+# Username: <robot username from the Slack channel>
+# Password: <robot token from the Slack channel>
 podman pull quay.io/redhat-cop/openshift-virtualization-migration-ee:2.6
 podman images | grep openshift-virtualization-migration-ee
 ```
@@ -224,6 +232,13 @@ which -a ansible-navigator             # first line inside ~/.virtualenvs/opensh
 Activate the virtual environment again (`source ~/.virtualenvs/openshift_virt_bootcamp/bin/activate`)
 in every new terminal you use for the labs.
 
+> **`pip install` fails with `SSL: CERTIFICATE_VERIFY_FAILED` (corporate network / proxy)?** Your
+> company inspects HTTPS traffic. Best: point pip to the company CA bundle,
+> `pip config set global.cert /path/to/company-ca.pem`. Quick one-time workaround for the lab:
+> ```bash
+> pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org ansible-navigator
+> ```
+
 ### 3. The `oc` command line
 
 The RHDP lab cluster runs **OpenShift 4.18**. Use a 4.18 client. Download it:
@@ -258,12 +273,13 @@ mv vmf-bootcamp-day2-lab-main vmf-bootcamp-day2-lab
 
 ### 5. Registry login and the execution environment
 
-Your instructor gives you a **robot account** for `quay.io/redhat-cop`.
+Your instructors post a **robot account** for `quay.io/redhat-cop` in the bootcamp **Slack
+channel (prerequisites)**.
 
 ```bash
 podman login quay.io/redhat-cop
-# Username: <robot username from the instructor>
-# Password: <robot token from the instructor>
+# Username: <robot username from the Slack channel>
+# Password: <robot token from the Slack channel>
 
 podman pull quay.io/redhat-cop/openshift-virtualization-migration-ee:2.6
 podman images | grep openshift-virtualization-migration-ee

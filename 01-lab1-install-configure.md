@@ -10,6 +10,11 @@ laptop: ansible-navigator ──(oc token, API 6443)──► cluster: service a
 AAP: workflow "Configure OpenShift Virtualization Migration" ──► MTV: provider, VDDK secret, maps
 ```
 
+> **Where do I run this?** Steps 1–3 run **on your laptop** (Windows: in the **Ubuntu / WSL2
+> terminal**; macOS/Linux: a terminal), with the virtual environment activated. Your RHDP
+> environment has no terminal for you. Steps 4–5 happen in the **AAP web UI** of your RHDP
+> environment.
+
 ## Step 1 · Collect your values and log in
 
 Open your RHDP service details page and the **Lab instructions** page, and note the cluster API
@@ -84,6 +89,16 @@ What the other RHDP-specific lines do:
 
 ## Step 3 · Seed AAP
 
+**Before you start, check that AAP is ready and reachable** (fresh RHDP environments sometimes need a
+few more minutes, and a not-ready AAP shows up as `TimeoutError: The read operation timed out`):
+```bash
+grep -E '^ *aap_url:|^ *aap_request_timeout:' inventory-openshift-virt-bootcamp.yml   # both present?
+curl -sk https://<AAP host>/api/gateway/v1/ping/       # {"status":"good", ...} quickly (< 2 s)
+```
+You must also be able to log in to the AAP web UI with the admin password. If the ping is slow,
+fails, or the UI doesn't load, wait 5 minutes and try again. If it stays like that, restart the
+environment in RHDP (*Stop*, then *Start*) and check again.
+
 Run this from the `inventory` folder:
 ```bash
 cd ~/vmf-bootcamp-day2-lab/inventory
@@ -114,6 +129,17 @@ aap-aap.apps.cluster-xxxxx.dyn.redhatworkshops.io : ok=171  changed=41  unreacha
 openshift-virt.bootcamp.redhat.com                : ok=6    changed=2   unreachable=0  failed=0  skipped=9   …
 ```
 The run is **idempotent**: after a timeout or an error you've fixed, just run it again.
+
+> **Seed failed?** The three most common causes, in this order:
+> 1. `SSL: UNEXPECTED_EOF_WHILE_READING`: network path (Windows: WSL **mirrored** networking,
+>    [prerequisites W3](00-prerequisites.md#w3--fix-wsl-networking-required); VPN).
+> 2. `TimeoutError: The read operation timed out`: AAP not ready yet or overloaded. Check the
+>    ping above, then re-run. Make sure `aap_request_timeout: 60` is in your inventory (old copies of
+>    the template don't have it).
+> 3. `the playbook: … could not be found`: old ansible-navigator
+>    ([prerequisites](00-prerequisites.md#version-requirements)).
+>
+> More in [04 · Troubleshooting](04-troubleshooting.md#lab-1).
 
 ## Step 4 · Explore what was seeded in AAP
 
@@ -199,6 +225,19 @@ vmware-virt-bootcamp   vsphere     Ready    True    True        True        http
 ```
 The map name `<target>-host` means "from source `vmware-virt-bootcamp` to destination `host`",
 where `host` is the cluster itself.
+
+**Workflow failed at "MTV Network and Storage Mapping"** with *"Source Provider with name
+'vmware-virt-bootcamp' not found in namespace 'openshift-mtv'"*? The provider was created but MTV
+couldn't connect to the vCenter, so it never appeared in MTV's inventory. Check it:
+```bash
+oc get providers.forklift.konveyor.io vmware-virt-bootcamp -n openshift-mtv \
+  -o jsonpath='{range .status.conditions[*]}{.type}={.status} {.message}{"\n"}{end}'
+```
+- **Ready/ConnectionTestSucceeded = False:** wrong vCenter URL, user or password. Fix `vcenter_url` /
+  `vmware_username` / `vmware_password` in your inventory, **re-run step 3** (it updates the AAP
+  credential), then relaunch the workflow.
+- **Ready = True:** MTV just needed more time to load the inventory. Relaunch the workflow (or only
+  *Configure MTV Mapping - vmware-virt-bootcamp - openshift-virt.bootcamp.redhat.com*).
 
 Not green? See [04 · Troubleshooting](04-troubleshooting.md#lab-1).
 
