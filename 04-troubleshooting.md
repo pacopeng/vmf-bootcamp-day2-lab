@@ -38,6 +38,8 @@ Every factory job is **idempotent**, so re-running is the normal way to recover.
 | `Could not locate a single NetworkAttachmentDefinition for network portgroup '<name>'` | **two** NADs are labelled with the same port group (in any namespace) | keep one; remove the other or its `infra.openshift-virtualization-migration/source-portgroup` annotation; relaunch Configure Target |
 | A port group maps to `pod` although you created a NAD | the `portgroup` value differs from the vSphere name (case!), or the NAD was created after the maps | fix the name, re-run Configure Networks, then Configure Target |
 | Maps created in `openshift-mtv` instead of your namespace | `mtv_management_migration_namespace` not entered in the launch Variables | relaunch with the variable |
+| Storage map still shows the default class after the optional override | `mtv_management_default_storage_class` missing in that launch, or a later re-run without it reset the map | relaunch Configure Target with both variables; check with the `oc get storagemap … -o jsonpath` command in Lab 2, step 4 |
+| Lab 3: disk PVC stays `Pending` / DiskAllocation fails after an override | the storage class name doesn't exist (typo) or can't host VM disks (e.g. `openshift-storage.noobaa.io`) | `oc get storageclass`; relaunch Lab 2 step 4 with a valid RBD/CephFS class, then re-create the Plan |
 
 ## Lab 3
 

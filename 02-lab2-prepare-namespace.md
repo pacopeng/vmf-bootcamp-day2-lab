@@ -8,6 +8,7 @@ its **own** VDDK secret, network map and storage map.
 1. create the namespace            (Platform team; the factory doesn't create namespaces)
 2. Configure Networks  [optional]  NADs for the port groups the VMs use
 3. Configure Target                VDDK secret + NetworkMap + StorageMap in the namespace
+4. Override storage    [optional]  a different storage class for this namespace
 ```
 
 ## Step 1 · Create the namespace
@@ -107,10 +108,72 @@ oc get storagemap vmware-virt-bootcamp-host -n vmexamples-automation \
 
 Not green? See [04 · Troubleshooting](04-troubleshooting.md#lab-2).
 
+## Step 4 · (Optional) Override the default storage class
+
+By default the storage map sends every vSphere datastore to the cluster's **default** storage
+class. To use a different class for **this namespace only**, launch the same workflow again,
+**Configure Target - vmware-virt-bootcamp - openshift-virt.bootcamp.redhat.com**, with one
+extra **Variable**:
+
+```yaml
+mtv_management_migration_namespace: vmexamples-automation
+mtv_management_default_storage_class: ocs-external-storagecluster-ceph-rbd-immediate
+```
+
+First list the classes on your cluster and pick one:
+```bash
+oc get storageclass
+```
+In the RHDP environment you'll see:
+
+| Storage class | Notes |
+|---|---|
+| `ocs-external-storagecluster-ceph-rbd` (default) | Ceph RBD, the volume is created when the VM first starts |
+| `ocs-external-storagecluster-ceph-rbd-immediate` | Ceph RBD, the volume is created immediately (**good choice for this step**) |
+| `ocs-external-storagecluster-cephfs` | CephFS (file storage) |
+| `openshift-storage.noobaa.io` | object storage buckets: **not** for VM disks |
+
+**Check** that the storage map now uses your class:
+```bash
+oc get storagemap vmware-virt-bootcamp-host -n vmexamples-automation \
+  -o jsonpath='{range .spec.map[*]}{.source.name} -> {.destination.storageClass}{"\n"}{end}'
+# workloadshare -> ocs-external-storagecluster-ceph-rbd-immediate
+```
+In Lab 3, the migrated VM's disk (PVC) is then created with this class.
+
+**How the factory picks the class**, per vSphere datastore:
+1. an entry in `mtv_management_storage_map_overrides` for that datastore (see below);
+2. else `mtv_management_default_storage_class` (what you just set);
+3. else the cluster's default storage class.
+
+**Different classes per datastore:** map each datastore by its vSphere **id** (not its name):
+```yaml
+mtv_management_migration_namespace: vmexamples-automation
+mtv_management_storage_map_overrides:
+  - id: <datastore id>                          # e.g. datastore-1234
+    storageClass: ocs-external-storagecluster-cephfs
+```
+Find the ids in the existing map:
+```bash
+oc get storagemap vmware-virt-bootcamp-host -n openshift-mtv \
+  -o jsonpath='{range .spec.map[*]}{.source.name} id={.source.id}{"\n"}{end}'
+```
+
+> **Keep in mind:**
+> - Launch variables apply only to that run. If you re-run Configure Target (or Configure MTV
+>   Mapping) for this namespace **without** the variable, the map goes back to the cluster default.
+> - The class must exist on the cluster (`oc get storageclass`). A typo doesn't fail the mapping
+>   job; the migration fails later, when the disk can't be created.
+> - To make a class the default for **every** namespace of a target, an administrator puts
+>   `mtv_management_default_storage_class` under the target's `mapping:` block in the inventory and
+>   re-seeds.
+
 ## Think about it (2 minutes)
 - Why does the namespace need its own maps, while the provider lives only in `openshift-mtv`?
 - A port group should be usable by *all* namespaces. Where do you put its NAD? (`default`,
   labelled once.)
+- Your Gold-tier datastore must land on fast storage, everything else on the default. Which
+  variable do you set? (`mtv_management_storage_map_overrides` for that datastore id.)
 
 ---
 Previous: [01 · Lab 1](01-lab1-install-configure.md) · Next: [03 · Lab 3: run a migration](03-lab3-run-migration.md)
