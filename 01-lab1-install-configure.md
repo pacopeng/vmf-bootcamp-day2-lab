@@ -89,6 +89,11 @@ What the other RHDP-specific lines do:
 
 ## Step 3 · Seed AAP
 
+> **On a corporate laptop or network?** Run this step from a **phone hotspot** (or a home network
+> with the VPN and security client off). Corporate networks often cut the seed's HTTPS
+> connections (`SSL: UNEXPECTED_EOF_WHILE_READING`). Only this step needs it; afterwards you can
+> switch back.
+
 **Before you start, check that AAP is ready and reachable** (fresh RHDP environments sometimes need a
 few more minutes, and a not-ready AAP shows up as `TimeoutError: The read operation timed out`):
 ```bash
@@ -131,8 +136,9 @@ openshift-virt.bootcamp.redhat.com                : ok=6    changed=2   unreacha
 The run is **idempotent**: after a timeout or an error you've fixed, just run it again.
 
 > **Seed failed?** The three most common causes, in this order:
-> 1. `SSL: UNEXPECTED_EOF_WHILE_READING`: network path (Windows: WSL **mirrored** networking,
->    [prerequisites W3](00-prerequisites.md#w3--fix-wsl-networking-required); VPN).
+> 1. `SSL: UNEXPECTED_EOF_WHILE_READING`: your **corporate network** (VPN / security client) cuts
+>    HTTPS connections. **Switch the laptop to a phone hotspot for this step** and re-run. That fixed
+>    it for participants in earlier runs.
 > 2. `TimeoutError: The read operation timed out`: AAP not ready yet or overloaded. Check the
 >    ping above, then re-run. Make sure `aap_request_timeout: 60` is in your inventory (old copies of
 >    the template don't have it).

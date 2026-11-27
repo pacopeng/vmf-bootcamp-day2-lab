@@ -28,7 +28,9 @@ and Lab 2 needs Lab 1.
    when the labs start. You're ready when the service shows **Running / Ready** and you received
    the details email.
 2. **Prepare your laptop** with [00 · Prerequisites](00-prerequisites.md) and complete its
-   ✅ pre-flight checklist, especially on **Windows** (WSL2 setup, steps W1–W9).
+   ✅ pre-flight checklist, especially on **Windows** (WSL2 setup, steps W1–W8).
+   **Corporate laptop or network:** have a **phone hotspot** ready. The Lab 1 seed step often fails
+   on corporate networks and works from a hotspot.
 3. **Get the registry credentials:** the quay.io/redhat-cop robot username and token are posted by
    the instructors in the bootcamp **Slack channel (prerequisites)**.
 4. **Open your environment once:** log in to the OpenShift console and the AAP UI with the values

@@ -24,10 +24,9 @@ during the lab wastes your lab time. You need about **5 GB of free disk space**.
 
 | Component | Minimum | Recommended / tested | Check with | Notes |
 |---|---|---|---|---|
-| **Windows** | Windows 10 (with the MTU fallback in W3) | **Windows 11 22H2 or newer** | `winver` | mirrored networking (W3) needs Windows 11 22H2+ |
+| **Windows** | Windows 10 | Windows 11 | `winver` | |
 | **WSL** | WSL **2** | WSL 2.0 or newer (`wsl --update`) | `wsl --version`, `wsl -l -v` (VERSION 2) | WSL 1 is not supported |
 | **Linux distribution in WSL** | **Ubuntu 22.04** (Python 3.10) | **Ubuntu 24.04** (Python 3.12) | `cat /etc/os-release` | Ubuntu 20.04 (Python 3.8) leads to an old ansible-navigator |
-| **WSL networking** | NAT + MTU 1350 | **mirrored** | `wslinfo --networking-mode` | NAT behind a corporate VPN causes `SSL: UNEXPECTED_EOF_WHILE_READING` |
 
 **Provided by your RHDP environment** (nothing to install; for reference):
 
@@ -39,7 +38,7 @@ during the lab wastes your lab time. You need about **5 GB of free disk space**.
 | Migration Factory collection (AAP Project) | tag `1.25.0` (set by `aap_project_branch` in the inventory) |
 
 **Pick your path:**
-- **[Windows laptop → steps W1–W9](#windows-laptop-wsl2)** (most participants)
+- **[Windows laptop → steps W1–W8](#windows-laptop-wsl2)** (most participants)
 - **[macOS or Linux laptop → steps 1–6](#macos-or-linux-laptop)**
 
 Both paths end with the same [✅ pre-flight checklist](#-pre-flight-checklist).
@@ -49,12 +48,16 @@ Both paths end with the same [✅ pre-flight checklist](#-pre-flight-checklist).
 ## Windows laptop (WSL2)
 
 On Windows everything runs inside **WSL2** (Windows Subsystem for Linux) with **Ubuntu 24.04**.
-Follow every step in order. Most problems we saw on Day 2 came from skipping W3 or W4.
+
+> **Corporate laptop or network? Have a phone hotspot ready on Day 2.** Corporate networks (VPN /
+> security clients) often cut the HTTPS connections of the Lab 1 seed step
+> (`SSL: UNEXPECTED_EOF_WHILE_READING`). Switching the laptop to a phone hotspot for that one step
+> fixed it for every affected participant.
+Follow every step in order. Most problems we saw on Day 2 came from working under `/mnt/c` (step W3) or an old ansible-navigator (step W5).
 
 ### W1 · Check your Windows version
 Press **Win + R**, type `winver`, press Enter.
-- **Windows 11, version 22H2 or newer:** recommended (supports the network fix in W3).
-- **Windows 10:** works, but use the fallback in W3.
+- **Windows 11** or **Windows 10** with WSL2: both work.
 
 ### W2 · Install WSL2 and Ubuntu 24.04
 Open **PowerShell as Administrator** (Start → type *PowerShell* → *Run as administrator*):
@@ -75,35 +78,7 @@ wsl --install -d Ubuntu-24.04
 wsl --set-default Ubuntu-24.04
 ```
 
-### W3 · Fix WSL networking (required)
-Corporate VPNs and proxies often break long or parallel HTTPS connections from WSL. Lab 1 then
-fails with `SSL: UNEXPECTED_EOF_WHILE_READING`. Switch WSL to **mirrored** networking, which
-uses the Windows network directly.
-
-In PowerShell (normal, not admin):
-```powershell
-notepad "$env:USERPROFILE\.wslconfig"
-```
-Paste this, save, close Notepad (click *Yes* if Notepad asks to create the file):
-```ini
-[wsl2]
-networkingMode=mirrored
-dnsTunneling=true
-autoProxy=true
-```
-Restart WSL:
-```powershell
-wsl --shutdown
-```
-Open Ubuntu again and check:
-```bash
-wslinfo --networking-mode          # expected: mirrored
-```
-> **Windows 10, or `wslinfo` shows `nat`:** lower the MTU in every new Ubuntu terminal before
-> Lab 1: `sudo ip link set dev eth0 mtu 1350` (check the interface name with `ip link`). If Lab 1
-> still fails with `UNEXPECTED_EOF_WHILE_READING`, disconnect the corporate VPN for the seed step.
-
-### W4 · Always work in the Ubuntu terminal, in your Linux home
+### W3 · Always work in the Ubuntu terminal, in your Linux home
 Open **Ubuntu 24.04** from the Start menu or Windows Terminal. All commands from here on, in all
 labs, run **in this terminal**:
 ```bash
@@ -113,7 +88,7 @@ pwd                # /home/<your linux user>
 > **Never work under `/mnt/c/...`** (your Windows drive, e.g. `/mnt/c/Users/<you>/Documents`).
 > Those paths are slow, often contain spaces (`My Documents`) and break container mounts.
 
-### W5 · Install the Linux packages
+### W4 · Install the Linux packages
 ```bash
 sudo apt-get update
 sudo apt-get install -y podman python3-venv git curl unzip
@@ -122,7 +97,7 @@ podman info --format '{{.Host.Arch}} {{.Version.Version}}'
 > **Don't install `ansible` or `ansible-navigator` with `apt`.** Ubuntu's packages are too old.
 > If you installed them earlier, remove them: `sudo apt-get remove -y ansible-navigator`.
 
-### W6 · Python virtual environment and ansible-navigator
+### W5 · Python virtual environment and ansible-navigator
 ```bash
 python3 --version                                  # Ubuntu 24.04: 3.12
 mkdir -p ~/.virtualenvs
@@ -147,14 +122,14 @@ Run `source ~/.virtualenvs/openshift_virt_bootcamp/bin/activate` again in **ever
 > could not be found"*. Remove the other copy and run `hash -r`, or call
 > `~/.virtualenvs/openshift_virt_bootcamp/bin/ansible-navigator` explicitly.
 
-### W7 · Install `oc`
+### W6 · Install `oc`
 ```bash
 curl -L -o /tmp/oc.tar.gz https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable-4.18/openshift-client-linux.tar.gz
 sudo tar -xzf /tmp/oc.tar.gz -C /usr/local/bin oc kubectl
 oc version --client                                # 4.18.x
 ```
 
-### W8 · Get this repository (into your Linux home)
+### W7 · Get this repository (into your Linux home)
 With git:
 ```bash
 cd ~
@@ -169,7 +144,7 @@ unzip vmf-bootcamp-day2-lab-main.zip
 mv vmf-bootcamp-day2-lab-main vmf-bootcamp-day2-lab
 ```
 
-### W9 · Registry login and the execution environment
+### W8 · Registry login and the execution environment
 The robot username and token are posted in the bootcamp **Slack channel (prerequisites)**.
 ```bash
 podman login quay.io/redhat-cop
@@ -314,7 +289,6 @@ Run these in a **new** terminal (Windows: the **Ubuntu** terminal), with the vir
 
 | Check | Command | Expected |
 |---|---|---|
-| Windows only: WSL networking | `wslinfo --networking-mode` | `mirrored` (or MTU fallback applied, see W3) |
 | Podman works | `podman info >/dev/null && echo ok` | `ok` |
 | Python | `python3 --version` (inside the venv) | 3.10 or newer |
 | ansible-navigator | `ansible-navigator --version` and `which -a ansible-navigator` | 25.x or newer (tested: 26.11); the first path is inside `~/.virtualenvs/openshift_virt_bootcamp/` |
